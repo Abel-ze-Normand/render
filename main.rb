@@ -2,6 +2,8 @@ $LOAD_PATH << '.'
 
 require 'wireframe_render.rb'
 
-render = WireRender::WireFrameModel.new 'dodecahedron.ply'
+render = Render::Model.new 'dodecahedron.ply'
 
-render.render
+#render.render_wireframe
+
+render.rasterize
