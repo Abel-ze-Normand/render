@@ -1,7 +1,7 @@
 module Linedrawer
   require 'chunky_png'
 
-  def self.linedraw(x0, y0, x1, y1, target)
+  def self.linedraw(x0, y0, x1, y1, target, color)
     png = target
     steep = false
     if ((x0 - x1).abs < (y0 - y1).abs)
@@ -24,18 +24,18 @@ module Linedrawer
 
     for x in x0..x1 do
 
-    if steep
-      png[y, x] = ChunkyPNG::Color.from_hex('#FFFFFF')
-    else
-      png[x, y] = ChunkyPNG::Color.from_hex('#FFFFFF')
-    end
+      if steep
+        png[y, x] = color
+      else
+        png[x, y] = color
+      end
 
-    error += derror
+      error += derror
 
-    if error > dx
-      y += (y1 > y0 ? 1 : -1)
-      error -= dx*2
-    end
+      if error > dx
+        y += (y1 > y0 ? 1 : -1)
+        error -= dx*2
+      end
     end
   end
 end

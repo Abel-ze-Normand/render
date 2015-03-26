@@ -96,8 +96,8 @@ module Render
         x2 = (@vertices[index_v2]["x"] * @mod + 1) * @width / 2 + @xshift
         y2 = (@vertices[index_v2]["y"] * @mod + 1) * @height / 2 + @yshift
 
-        puts "coords - t0:(#{x0}, #{y0}) t1:(#{x1}, #{y1}) t2:(#{x2}, #{y2})"
-        fill_triangle x0, y0, x1, y1, x2, y2, ChunkyPNG::Color.rgb(Random.rand(255), Random.rand(255), Random.rand(255))
+        #puts "coords - t0:(#{x0}, #{y0}) t1:(#{x1}, #{y1}) t2:(#{x2}, #{y2})"
+        fill_triangle x0.to_i, y0.to_i, x1.to_i, y1.to_i, x2.to_i, y2.to_i, ChunkyPNG::Color.rgb(Random.rand(255), Random.rand(255), Random.rand(255))
         #@png.save('example.png')
         #sleep(4)
       end
@@ -122,23 +122,26 @@ module Render
         x1, x2 = x2, x1
         y1, y2 = y2, y1
       end
-      total_height = y2 - y0
-      for y in 0..total_height 
-        second_half = y > (y1 - y0) || y1 == y0
-        segment_height = second_half ? y2 - y1 : y1 - y0
-        if segment_height == 0 then next end
-        alpha = total_height.to_f/(x2 - x0)
-        beta = segment_height.to_f / (second_half ? x2 - x1 : x1 - x0)
-        #puts "alpha = #{alpha}, beta = #{beta}"
-        lx = (y / alpha) + x0
-        rx = (second_half ? ((y - y1 + y0)/beta + x1) : ((y / beta) + x0)) 
-        #if second_half then puts(segment_height.to_s + " " + (x2 - x1).to_s) end
-        #alpha = y / total_height
-        #beta = y - (second_half ? y1 - y0 : 0) / segment_height
-        #ax = x0 + (x2 - x0)*alpha
-        #bx = second_half ? x1 + (x2 - x1)*beta : x0 + (x1 - x0) * beta
-        Linedrawer::linedraw(lx.to_i, y+y0, rx.to_i, y+y0, @png, color) 
+      #lower half
+      for y in y0..y1
+        if (y2 - y0 == 0 || y1 - y0 == 0) then next end
+        lx = (y - y0).to_f * (x2 - x0) / (y2 - y0) + x0
+        rx = (y - y0).to_f * (x1 - x0) / (y1 - y0) + x0
+        Linedrawer::linedraw(lx.floor, y, rx.floor, y, @png, color)
       end
+
+      #upper half
+      for y in y1..y2
+        if (y1 - y2 == 0 || y2 - y0 == 0) then next end
+        lx = (y - y0).to_f * (x2 - x0) / (y2 - y0) + x0
+        rx = (y - y1).to_f * (x2 - x1) / (y2 - y1) + x1
+        Linedrawer::linedraw(lx.floor, y, rx.floor, y, @png, color)
+      end
+    end
+
+    def flip
+      @png.rotate_180!
+      @png.save('example.png')
     end
   end
 end
