@@ -1,7 +1,6 @@
 module Render
   require 'ply'
   require 'chunky_png'
-  require './linedrawer.rb'
 
   class PointVector
     attr_accessor :x, :y, :z
@@ -64,6 +63,45 @@ module Render
       #-------------END-CONFIG---------
     end
 
+    
+    def linedraw x0, y0, x1, y1, color
+      
+      steep = false
+      if ((x0 - x1).abs < (y0 - y1).abs)
+          x0, y0 = y0, x0
+          x1, y1 = y1, x1
+          steep = true
+      end
+
+      if (x0 > x1)
+          x0, x1 = x1, x0
+          y0, y1 = y1, y0
+      end
+
+      dx = x1 - x0
+      dy = y1 - y0
+
+      derror = dy.abs * 2
+      error = 0
+      y = y0
+
+      for x in x0..x1 do
+
+        if steep
+          @png[y, x] = color
+        else
+          @png[x, y] = color
+        end
+
+        error += derror
+
+        if error > dx
+          y += (y1 > y0 ? 1 : -1)
+          error -= dx*2
+        end
+      end
+    end
+
     def render_wireframe 
       
       @png = ChunkyPNG::Image.from_file('example.png')
@@ -80,7 +118,7 @@ module Render
           x1 = (@vertices[index_v1]["x"] * @mod + 1) * @width / 2 + @xshift
           y1 = (@vertices[index_v1]["y"] * @mod + 1) * @height / 2 + @yshift
       
-          Linedrawer::linedraw(x0.to_i, y0.to_i, x1.to_i, y1.to_i, @png, ChunkyPNG::Color.from_hex('#FFFFFF'))
+          linedraw(x0.to_i, y0.to_i, x1.to_i, y1.to_i, ChunkyPNG::Color.from_hex('#FFFFFF'))
         end
       end
       #rotate if need
@@ -148,7 +186,7 @@ module Render
         if (y2 - y0 == 0 || y1 - y0 == 0) then next end
         lx = (y - y0).to_f * (x2 - x0) / (y2 - y0) + x0
         rx = (y - y0).to_f * (x1 - x0) / (y1 - y0) + x0
-        Linedrawer::linedraw(lx.floor, y, rx.floor, y, @png, color)
+        linedraw(lx.floor, y, rx.floor, y, color)
       end
 
       #upper half
@@ -156,7 +194,7 @@ module Render
         if (y1 - y2 == 0 || y2 - y0 == 0) then next end
         lx = (y - y0).to_f * (x2 - x0) / (y2 - y0) + x0
         rx = (y - y1).to_f * (x2 - x1) / (y2 - y1) + x1
-        Linedrawer::linedraw(lx.floor, y, rx.floor, y, @png, color)
+        linedraw(lx.floor, y, rx.floor, y, color)
       end
     end
 
