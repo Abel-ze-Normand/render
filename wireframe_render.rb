@@ -33,6 +33,10 @@ module Render
       @png = ChunkyPNG::Image.from_file('example.png')
       @faces = @target.data["face"]
       @vertices = @target.data["vertex"]
+      @zbuffer = Array.new(@height)
+      @zbuffer.each do |line|
+        line = Array.new(@width, -Float::INFINITY)
+      end
     end
 
     def load_config path
@@ -47,11 +51,17 @@ module Render
         @height = str[(str.index("=") + 1)..str.length].to_f
 
         str = config.gets
+        @depth = str[(str.index("=") + 1)..str.length].to_f
+        
+        str = config.gets
         @xshift = str[(str.index("=") + 1)..str.length].to_f
 
         str = config.gets
         @yshift = str[(str.index("=") + 1)..str.length].to_f
 
+        str = config.gets
+        @zshift = str[(str.index("=") + 1)..str.length].to_f
+        
         str = config.gets
         @flip = str[(str.index("=") + 1)..str.length] != nil
 
@@ -88,7 +98,7 @@ module Render
       for x in x0..x1 do
 
         if steep
-          @png[y, x] = color
+          @png[y, x] = color 
         else
           @png[x, y] = color
         end
@@ -163,6 +173,17 @@ module Render
 
       #@png.rotate_180! if @flip
       @png.save('example.png')
+    end
+
+    def fill_line_with_zbuffer lx, lz, rx, rz, y, color #TODO line equation
+      if lx > rx then
+        lx, rx = rx, lx 
+        lz, rz = rz, lz
+      end
+
+      for i in lx..rx
+        #if @zbuffer[i][y] <  
+      end
     end
 
     def fill_triangle x0, y0, x1, y1, x2, y2, color #TODO refactor all for PointVector
