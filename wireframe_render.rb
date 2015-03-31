@@ -176,6 +176,7 @@ module Render
     end
 
     def fill_line_with_zbuffer lt, rt, y, color
+      # нужно продумать с уравнением прямой в пространстве. координаты lt и rt при построчном рендере постоянно изменяются, но и "глубина" этих точек постоянно меняется. нужно как то определять координаты lt.z и rt.z, чтобы zbuffer имел место быть
       if lt.x > rt.x then
         lt.x, rt.x = rt.x, lt.x 
         lt.z, rt.z = rt.z, lt.z
