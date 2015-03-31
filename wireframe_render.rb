@@ -175,47 +175,60 @@ module Render
       @png.save('example.png')
     end
 
-    def fill_line_with_zbuffer lx, lz, rx, rz, y, color #TODO line equation
-      if lx > rx then
-        lx, rx = rx, lx 
-        lz, rz = rz, lz
+    def fill_line_with_zbuffer lt, rt, y, color
+      if lt.x > rt.x then
+        lt.x, rt.x = rt.x, lt.x 
+        lt.z, rt.z = rt.z, lt.z
       end
 
-      for i in lx..rx
-        #if @zbuffer[i][y] <  
+      for x in lt.x..rt.x
+        z = (x - lt.x).to_f * (rt.z - lt.z) / (rt.x - lt.x) + lt.z
+        z.floor!
+        if @zbuffer[i][y] < z 
+          @png[x, y] = color
+          @zbuffer = z
+        end
       end
     end
 
-    def fill_triangle x0, y0, x1, y1, x2, y2, color #TODO refactor all for PointVector
+    def fill_triangle t0, t1, t2, color
       #вырожденный случай
-      return if y0==y1 && y0==y2
+      #return if y0==y1 && y0==y2
+      return if t0.y==t1.y && t0.y==t2.y
       #sort vertices by Oy
-      if y0 > y1 
-        x0, x1 = x1, x0
-        y0, y1 = y1, y0
+      if t0.y > t1.y 
+        t0.x, t1.x = t1.x, t0.x
+        t0.y, t1.y = t1.y, t0.y
+        t0.z, t1.z = t1.z, t0.z
       end
-      if y0 > y2
-        x0, x2 = x2, x0
-        y0, y2 = y2, y0
+      if t0.y > t2.y
+        t0.x, t2.x = t2.x, t0.x
+        t0.y, t2.y = t2.y, t0.y
+        t0.z, t2.z = t2.z, t0.z
       end
-      if y1 > y2
-        x1, x2 = x2, x1
-        y1, y2 = y2, y1
+      if t1.y > t2.y
+        t1.x, t2.x = t2.x, t1.x
+        t1.y, t2.y = t2.y, t1.y
+        t1.z, t2.z = t2.z, t1.z
       end
       #lower half
-      for y in y0..y1
-        if (y2 - y0 == 0 || y1 - y0 == 0) then next end
-        lx = (y - y0).to_f * (x2 - x0) / (y2 - y0) + x0
-        rx = (y - y0).to_f * (x1 - x0) / (y1 - y0) + x0
+      for y in t0.y..t1.y
+        if (t2.y - t0.y == 0 || t1.y - t0.y == 0) then next end
+        lx = (y - t0.y).to_f * (t2.x - t0.x) / (t2.y - t0.y) + t0.x
+        rx = (y - t0.y).to_f * (t1.x - t0.x) / (t1.y - t0.y) + t0.x
         linedraw(lx.floor, y, rx.floor, y, color)
+        #lt = Point.new(lx, 1, t0.z)
+        #rt = Point.new(rx, 1, t1.z)
+        #fill_line_with_zbuffer lt, rt, y, color
       end
 
       #upper half
-      for y in y1..y2
-        if (y1 - y2 == 0 || y2 - y0 == 0) then next end
-        lx = (y - y0).to_f * (x2 - x0) / (y2 - y0) + x0
-        rx = (y - y1).to_f * (x2 - x1) / (y2 - y1) + x1
+      for y in t1.y..t2.y
+        if (t1.y - t2.y == 0 || t2.y - t0.y == 0) then next end
+        lx = (y - t0.y).to_f * (t2.x - t0.x) / (t2.y - t0.y) + t0.x
+        rx = (y - t1.y).to_f * (t2.x - t1.x) / (t2.y - t1.y) + t1.x
         linedraw(lx.floor, y, rx.floor, y, color)
+        #lt = Point.new(lx, 1, t1.z)
       end
     end
 
@@ -236,7 +249,7 @@ module Render
       intensity = (normal.x * light.x + normal.y * light.y + normal.z * light.z) / norma_normal / light_norma
       if (intensity > 0) then 
         color = ChunkyPNG::Color.rgb((intensity * 255).to_i , (intensity * 255).to_i, (intensity * 255).to_i)
-        fill_triangle t0.x, t0.y, t1.x, t1.y, t2.x, t2.y, color
+        fill_triangle t0, t1, t2, color
       end
     end
   end
