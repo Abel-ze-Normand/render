@@ -33,9 +33,9 @@ module Render
       @png = ChunkyPNG::Image.from_file('example.png')
       @faces = @target.data["face"]
       @vertices = @target.data["vertex"]
-      @zbuffer = Array.new(@height)
-      @zbuffer.each do |line|
-        line = Array.new(@width, -Float::INFINITY)
+      @zbuffer = Array.new(@height) { Array.new (@width)}
+      @zbuffer.each do |sub|
+        sub.map! {|item| item = -Float::INFINITY}
       end
     end
 
@@ -182,6 +182,8 @@ module Render
         lt.z, rt.z = rt.z, lt.z
       end
 
+
+
       for x in lt.x..rt.x
         z = (x - lt.x).to_f * (rt.z - lt.z) / (rt.x - lt.x) + lt.z
         z.floor!
@@ -212,15 +214,21 @@ module Render
         t1.y, t2.y = t2.y, t1.y
         t1.z, t2.z = t2.z, t1.z
       end
+      zpolygon = ([t0.z, t1.z, t2.z].max + [t0.z, t1.z, t2.z].min)/2
       #lower half
       for y in t0.y..t1.y
         if (t2.y - t0.y == 0 || t1.y - t0.y == 0) then next end
         lx = (y - t0.y).to_f * (t2.x - t0.x) / (t2.y - t0.y) + t0.x
         rx = (y - t0.y).to_f * (t1.x - t0.x) / (t1.y - t0.y) + t0.x
-        linedraw(lx.floor, y, rx.floor, y, color)
-        #lt = Point.new(lx, 1, t0.z)
-        #rt = Point.new(rx, 1, t1.z)
-        #fill_line_with_zbuffer lt, rt, y, color
+        #linedraw(lx.floor, y, rx.floor, y, color)
+        if (lx > rx) then lx, rx = rx, lx end
+        for x in (lx.floor)..(rx.floor)
+          if zpolygon <= @zbuffer[x][y] then next
+          else
+            @png[x, y] = color
+            @zbuffer[x][y] = zpolygon
+          end
+        end
       end
 
       #upper half
@@ -228,8 +236,15 @@ module Render
         if (t1.y - t2.y == 0 || t2.y - t0.y == 0) then next end
         lx = (y - t0.y).to_f * (t2.x - t0.x) / (t2.y - t0.y) + t0.x
         rx = (y - t1.y).to_f * (t2.x - t1.x) / (t2.y - t1.y) + t1.x
-        linedraw(lx.floor, y, rx.floor, y, color)
-        #lt = Point.new(lx, 1, t1.z)
+        #linedraw(lx.floor, y, rx.floor, y, color)
+        if (lx > rx) then lx, rx = rx, lx end
+        for x in (lx.floor)..(rx.floor)
+          if zpolygon <= @zbuffer[x][y] then next
+          else
+            @png[x, y] = color
+            @zbuffer[x][y] = zpolygon
+          end
+        end
       end
     end
 

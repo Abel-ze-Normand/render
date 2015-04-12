@@ -3,7 +3,7 @@ $LOAD_PATH << '.'
 require 'wireframe_render.rb'
 
 render = Render::Model.new 'cow.ply'
-render.mod = 0.3
+render.mod = 0.35
 render.yshift = -250
 #render.render_wireframe
 
